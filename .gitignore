@@ -6,3 +6,4 @@ build/
 .eggs/
 *.pkl
 .DS_Store
+.pytest_cache/

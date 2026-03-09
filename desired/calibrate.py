@@ -87,8 +87,8 @@ def _evaluate_branch(x, x_e, coeff, disp, xmin, xmax,
     if xx.size == 0:
         return y, y_e
 
-    # Coefficients stored ascending [a0, a1, ...]; polyval needs descending
-    poly_coeffs = coeff[::-1]
+    # Coefficients stored in polyval order (descending power: highest power first)
+    poly_coeffs = coeff
 
     y[mask] = np.polyval(poly_coeffs, xx)
 

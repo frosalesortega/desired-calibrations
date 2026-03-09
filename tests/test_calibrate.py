@@ -94,8 +94,8 @@ class TestCalibrateDoubleValued:
     def test_both_branches_returns_8(self):
         result = calibrate("R3", 0.6)
         assert len(result) == 8
-        # With placeholder data, all values should be NaN
-        assert all(np.isnan(v) for v in result)
+        # With real data, upper branch should have valid values
+        assert not np.isnan(result[0])
 
     def test_single_branch_returns_4(self):
         result = calibrate("R3", 0.6, branch="upper")
