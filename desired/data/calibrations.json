@@ -1,0 +1,267 @@
+{
+    "_meta": {
+        "description": "DESIRED strong-line metallicity calibrations",
+        "reference": "Rosales-Ortega et al. (2026a)",
+        "version": "1.0.0",
+        "notes": {
+            "coeff_order": "Ascending power [a0, a1, a2, ...] for y = a0 + a1*x + a2*x^2 + ...",
+            "t2eq0": "Calibration assuming t^2 = 0 (no temperature fluctuations)",
+            "t2ge0": "Calibration assuming t^2 >= 0 (with temperature fluctuations)",
+            "disp": "Intrinsic calibration dispersion (dex)",
+            "xmin_xmax": "Validity range in index units (log scale)"
+        }
+    },
+
+    "monotonic": {
+
+        "R2": {
+            "type": "monotonic",
+            "definition": "log([OII]3727/Hb)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "O32": {
+            "type": "monotonic",
+            "definition": "log([OIII]5007/[OII]3727)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "Ne3O2": {
+            "type": "monotonic",
+            "definition": "log([NeIII]3869/[OII]3727)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "R2Ne3": {
+            "type": "monotonic",
+            "definition": "log(([OII]3727+[NeIII]3869)/Hb)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "N2": {
+            "type": "monotonic",
+            "definition": "log([NII]6584/Ha)",
+            "xmin": -2.66, "xmax": -0.22,
+            "t2eq0": { "coeff": [8.88, 0.87, 0.35, 0.1], "disp": 0.20 },
+            "t2ge0": { "coeff": [9.05, 0.92, 0.4, 0.12], "disp": 0.24 }
+        },
+        "O3N2": {
+            "type": "monotonic",
+            "definition": "log(([OIII]5007/Hb)/([NII]6584/Ha))",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "R3N2": {
+            "type": "monotonic",
+            "definition": "log([OIII]5007/[NII]6584)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "N2O2": {
+            "type": "monotonic",
+            "definition": "log([NII]6584/[OII]3727)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "S2": {
+            "type": "monotonic",
+            "definition": "log([SII]6717,6731/Ha)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "N2S2": {
+            "type": "monotonic",
+            "definition": "log([NII]6584/[SII]6717,6731)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "N2S2Ha": {
+            "type": "monotonic",
+            "definition": "log([NII]6584/[SII]6717,6731) + 0.264*log([NII]6584/Ha)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "S3": {
+            "type": "monotonic",
+            "definition": "log([SIII]9069,9532/Ha)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "S3O3": {
+            "type": "monotonic",
+            "definition": "log([SIII]9069/[OIII]5007)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "S23": {
+            "type": "monotonic",
+            "definition": "log(([SII]6717,6731+[SIII]9069,9532)/Ha)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "O3S2": {
+            "type": "monotonic",
+            "definition": "log(([OIII]5007/Hb)/([SII]6717,6731/Ha))",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "Ar3O3": {
+            "type": "monotonic",
+            "definition": "log([ArIII]7136/[OIII]5007)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "Ar3N2": {
+            "type": "monotonic",
+            "definition": "log([ArIII]7136/[NII]6584)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "Ne3S2": {
+            "type": "monotonic",
+            "definition": "log([NeIII]3869/[SII]6717,6731)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        },
+        "Ne3S3": {
+            "type": "monotonic",
+            "definition": "log([NeIII]3869/[SIII]9069)",
+            "xmin": null, "xmax": null,
+            "t2eq0": { "coeff": [], "disp": null },
+            "t2ge0": { "coeff": [], "disp": null }
+        }
+    },
+
+    "double_valued": {
+
+        "R3": {
+            "type": "double_valued",
+            "definition": "log([OIII]5007/Hb)",
+            "upper": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            },
+            "lower": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            }
+        },
+        "R23": {
+            "type": "double_valued",
+            "definition": "log(([OII]3727 + [OIII]4959,5007)/Hb)",
+            "upper": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            },
+            "lower": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            }
+        },
+        "R_hat": {
+            "type": "double_valued",
+            "definition": "0.47*R2 + 0.88*R3",
+            "upper": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            },
+            "lower": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            }
+        },
+        "RNe": {
+            "type": "double_valued",
+            "definition": "0.47*log([OII]3727/Hg)+0.88*log([NeIII]3869/Hg)",
+            "upper": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            },
+            "lower": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            }
+        },
+        "Ne3": {
+            "type": "double_valued",
+            "definition": "log([NeIII]3869/Hb)",
+            "upper": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            },
+            "lower": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            }
+        },
+        "R3S2": {
+            "type": "double_valued",
+            "definition": "log([OIII]5007/Hb + [SII]6717,6731/Ha)",
+            "upper": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            },
+            "lower": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            }
+        },
+        "Ar3": {
+            "type": "double_valued",
+            "definition": "log([ArIII]7136/Ha)",
+            "upper": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            },
+            "lower": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            }
+        },
+        "O3HeI": {
+            "type": "double_valued",
+            "definition": "log([OIII]5007/HeI 5876)",
+            "upper": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            },
+            "lower": {
+                "xmin": null, "xmax": null,
+                "t2eq0": { "coeff": [], "disp": null },
+                "t2ge0": { "coeff": [], "disp": null }
+            }
+        }
+    }
+}

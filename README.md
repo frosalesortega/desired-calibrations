@@ -136,14 +136,6 @@ When `index_e` is provided, errors are estimated using Monte Carlo propagation:
   
   σ<sub>total</sub> = √(σ<sub>MC</sub>² + σ<sub>int</sub>²)
 
-
-## Testing
-```bash
-pip install pytest
-pytest tests/ -v
-```
-
-
 ## File Structure
 
 ```
