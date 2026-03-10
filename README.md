@@ -136,17 +136,59 @@ When `index_e` is provided, errors are estimated using Monte Carlo propagation:
   
   σ<sub>total</sub> = √(σ<sub>MC</sub>² + σ<sub>int</sub>²)
 
+## Examples
+
+The `examples/` directory contains scripts demonstrating how to use the package:
+
+### `example_usage.py`
+
+Complete usage examples covering all common scenarios:
+
+```bash
+python examples/example_usage.py
+```
+
+This script demonstrates scalar and array inputs, monotonic and double-valued calibrations, error propagation, and how to inspect calibration parameters with `get_info()`.
+
+### `plot_calibrations.py`
+
+Diagnostic visualization of the calibration polynomials with Monte Carlo error bands. Requires `matplotlib`.
+
+```bash
+# Plot all calibrations (overview mosaic + individual figures)
+python examples/plot_calibrations.py
+
+# Plot specific calibrations only
+python examples/plot_calibrations.py N2 O3N2 R3
+
+# Save to PDF instead of displaying on screen
+python examples/plot_calibrations.py --save
+
+# Combine both
+python examples/plot_calibrations.py N2 R3 --save
+```
+
+Each figure shows the calibration polynomial (solid line), the MC-propagated 1σ error band, and the total error band (MC + intrinsic dispersion) for the *t*² = 0 and *t*² ≥ 0 scenarios. Double-valued calibrations display four panels (upper/lower branch × *t*² = 0 / *t*² ≥ 0).
+
+## Testing
+
+```bash
+pip install pytest
+pytest tests/ -v
+```
+
 ## File Structure
 
 ```
-desired/
+desired-calibrations/
 ├── desired/
 │   ├── __init__.py            # Public API
 │   ├── calibrate.py           # Core calibration engine
 │   └── data/
 │       └── calibrations.json  # All calibration parameters
 ├── examples/
-│   └── example_usage.py       # Usage examples
+│   ├── example_usage.py       # Usage examples
+│   └── plot_calibrations.py   # Diagnostic plots
 ├── tests/
 │   └── test_calibrate.py      # Unit tests
 ├── setup.py

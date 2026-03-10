@@ -4,7 +4,7 @@
         "reference": "Rosales-Ortega et al. (2026a)",
         "version": "1.0",
         "notes": {
-            "coeff_order": "Ascending power [a0, a1, a2, ...] for y = a0 + a1*x + a2*x^2 + ...",
+            "coeff_order": "Coefficients in np.polyval order (descending power): [a_n, ..., a1, a0]",
             "t2eq0": "Calibration assuming t^2 = 0 (no temperature fluctuations)",
             "t2ge0": "Calibration assuming t^2 >= 0 (with temperature fluctuations)",
             "disp": "Intrinsic calibration dispersion (dex)",
