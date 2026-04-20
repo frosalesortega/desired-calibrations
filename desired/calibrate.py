@@ -30,8 +30,6 @@ _DB = _load_calibrations()
 
 # Build a flat lookup: name -> entry (merging monotonic + double_valued)
 _CALIBRATIONS = {}
-for _entry in _DB.get("monotonic", {}).values():
-    pass  # populated below
 for _name, _entry in _DB.get("monotonic", {}).items():
     _CALIBRATIONS[_name] = _entry
 for _name, _entry in _DB.get("double_valued", {}).items():
@@ -50,8 +48,8 @@ def _mc_poly_error(x, x_e, coeffs, N=1000, seed=2025):
     ----------
     x      : 1-D array, input values
     x_e    : 1-D array, 1-sigma errors in x (same shape as x)
-    coeffs : array-like, polynomial coefficients in **descending** power
-             order (as expected by np.polyval)
+    coeffs : array-like, polynomial coefficients in np.polyval order
+             (descending power)
     N      : int, number of MC realisations
     seed   : int, random seed for reproducibility
 
@@ -68,10 +66,49 @@ def _mc_poly_error(x, x_e, coeffs, N=1000, seed=2025):
 
 
 # ---------------------------------------------------------------------------
+# Dispersion evaluation
+# ---------------------------------------------------------------------------
+def _eval_disp(xx, disp_global, disp_coeff, mode):
+    """
+    Evaluate the calibration dispersion for an array of index values.
+
+    Parameters
+    ----------
+    xx         : 1-D array, index values (within validity range)
+    disp_global: float, global calibration dispersion (sigma_fit)
+    disp_coeff : list or None, coefficients for the dispersion profile
+                 sigma(x), stored in np.polyval order (same convention
+                 as the calibration coefficients)
+    mode       : str, one of 'global', 'local', 'max'
+
+    Returns
+    -------
+    sigma : 1-D array, dispersion at each point
+    """
+    if mode == "global" or disp_coeff is None or len(disp_coeff) == 0:
+        return np.full_like(xx, disp_global, dtype=float)
+
+    # Evaluate sigma(x) using np.polyval (coefficients in descending power)
+    sigma_local = np.polyval(disp_coeff, xx)
+    # Ensure non-negative
+    sigma_local = np.maximum(sigma_local, 0.0)
+
+    if mode == "local":
+        return sigma_local
+    elif mode == "max":
+        # max[sigma_cal, sigma(x)] as recommended in Sec. 4.4
+        return np.maximum(disp_global, sigma_local)
+    else:
+        raise ValueError(
+            f"disp_mode must be 'global', 'local', or 'max'; got '{mode}'"
+        )
+
+
+# ---------------------------------------------------------------------------
 # Internal evaluation helper
 # ---------------------------------------------------------------------------
-def _evaluate_branch(x, x_e, coeff, disp, xmin, xmax,
-                     include_disp, mc_N, mc_seed):
+def _evaluate_branch(x, x_e, coeff, disp_global, disp_coeff,
+                     xmin, xmax, include_disp, disp_mode, mc_N, mc_seed):
     """
     Evaluate a single polynomial branch over the valid range.
 
@@ -87,22 +124,23 @@ def _evaluate_branch(x, x_e, coeff, disp, xmin, xmax,
     if xx.size == 0:
         return y, y_e
 
-    # Coefficients stored in polyval order (descending power: highest power first)
-    poly_coeffs = coeff
+    # Evaluate polynomial
+    y[mask] = np.polyval(coeff, xx)
 
-    y[mask] = np.polyval(poly_coeffs, xx)
+    # Evaluate dispersion at each point
+    sigma = _eval_disp(xx, disp_global, disp_coeff, disp_mode)
 
     # --- Error estimation ---
     if x_e is not None:
         xx_e = x_e[mask]
-        mc_err, _ = _mc_poly_error(xx, xx_e, poly_coeffs, N=mc_N, seed=mc_seed)
+        mc_err, _ = _mc_poly_error(xx, xx_e, coeff, N=mc_N, seed=mc_seed)
         if include_disp:
-            y_e[mask] = np.sqrt(mc_err**2 + disp**2)
+            y_e[mask] = np.sqrt(mc_err**2 + sigma**2)
         else:
             y_e[mask] = mc_err
     else:
-        # No index errors provided: return intrinsic dispersion only
-        y_e[mask] = disp
+        # No index errors provided: return dispersion only
+        y_e[mask] = sigma
 
     return y, y_e
 
@@ -152,7 +190,7 @@ def get_info(name):
 
 
 def calibrate(name, index, index_e=None, *,
-              include_disp=True, branch=None,
+              include_disp=True, disp_mode="max", branch=None,
               mc_N=1000, mc_seed=2025):
     """
     Apply a DESIRED strong-line metallicity calibration.
@@ -165,12 +203,21 @@ def calibrate(name, index, index_e=None, *,
         Observed line-ratio index value(s).
     index_e : float, array_like, or None
         1-sigma error(s) on the index. If ``None``, the returned errors
-        correspond to the intrinsic calibration dispersion only.
+        correspond to the calibration dispersion only.
     include_disp : bool, default True
-        If ``True`` **and** ``index_e`` is provided, the intrinsic
-        calibration dispersion is added in quadrature to the propagated
-        MC errors. If ``False``, only the MC-propagated errors are
-        returned.
+        If ``True`` **and** ``index_e`` is provided, the calibration
+        dispersion is added in quadrature to the propagated MC errors.
+        If ``False``, only the MC-propagated errors are returned.
+    disp_mode : str, default 'max'
+        How to evaluate the calibration dispersion:
+
+        - ``'global'`` — use the global dispersion sigma_fit (single
+          value for the entire calibration range).
+        - ``'local'``  — use the index-dependent dispersion
+          sigma(x) = q0 + q1*x + q2*x^2 (Eq. 3 in Rosales-Ortega
+          et al. 2026a), evaluated at each data point.
+        - ``'max'``    — use max[sigma_cal, sigma(x)] at each point
+          (recommended; see Sec. 4.4 of Rosales-Ortega et al. 2026a).
     branch : str or None
         For double-valued calibrations only: ``'upper'``, ``'lower'``,
         or ``None``.  If ``None`` **and** the calibration is
@@ -195,16 +242,28 @@ def calibrate(name, index, index_e=None, *,
     Each element is a float (if scalar input) or a NumPy array.
     Values outside the validity range are ``NaN``.
 
+    Notes
+    -----
+    The total uncertainty in a strong-line metallicity estimate is:
+
+        sigma_total = sqrt(sigma_MC^2 + sigma_cal^2)
+
+    where sigma_MC is the Monte Carlo propagated error from the index
+    measurement uncertainty, and sigma_cal is the calibration dispersion
+    controlled by ``disp_mode``. The recommended setting (``disp_mode='max'``)
+    uses max[sigma_fit, sigma(x)], ensuring that the uncertainty is never
+    underestimated in sparsely sampled regimes.
+
     Examples
     --------
     >>> from desired import calibrate
-    >>> # Monotonic calibration
+    >>> # Monotonic calibration (recommended: default disp_mode='max')
     >>> OH, OH_e, OH_t2, OH_t2e = calibrate('N2', -1.2, index_e=0.05)
+    >>> # Use global dispersion only
+    >>> OH, OH_e, OH_t2, OH_t2e = calibrate('N2', -1.2, index_e=0.05,
+    ...                                      disp_mode='global')
     >>> # Double-valued, specific branch
     >>> OH, OH_e, OH_t2, OH_t2e = calibrate('R3', 0.6, branch='upper')
-    >>> # Double-valued, both branches
-    >>> result = calibrate('R3', 0.6)
-    >>> OH_up, OH_up_e, OH_t2_up, OH_t2_up_e, OH_lo, OH_lo_e, OH_t2_lo, OH_t2_lo_e = result
     """
     # --- Validate name ---
     if name not in _CALIBRATIONS:
@@ -213,6 +272,13 @@ def calibrate(name, index, index_e=None, *,
             f"Available: {list_calibrations()}"
         )
     cal = _CALIBRATIONS[name]
+
+    # --- Validate disp_mode ---
+    if disp_mode not in ("global", "local", "max"):
+        raise ValueError(
+            f"disp_mode must be 'global', 'local', or 'max'; "
+            f"got '{disp_mode}'"
+        )
 
     # --- Prepare input ---
     x = np.asarray(index, dtype=float)
@@ -235,6 +301,14 @@ def calibrate(name, index, index_e=None, *,
             return tuple(float(a.item()) for a in rounded)
         return tuple(rounded)
 
+    # --- Helper to extract disp_coeff from a scenario dict ---
+    def _get_disp_coeff(sc):
+        """Get disp_coeff list, or None if absent/empty."""
+        dc = sc.get("disp_coeff", None)
+        if dc is not None and len(dc) > 0:
+            return dc
+        return None
+
     # --- Monotonic calibrations ---
     if cal["type"] == "monotonic":
         if branch is not None:
@@ -247,11 +321,13 @@ def calibrate(name, index, index_e=None, *,
 
         y0, y0e = _evaluate_branch(
             x, x_e, t2eq0["coeff"], t2eq0["disp"],
-            cal["xmin"], cal["xmax"], include_disp, mc_N, mc_seed
+            _get_disp_coeff(t2eq0),
+            cal["xmin"], cal["xmax"], include_disp, disp_mode, mc_N, mc_seed
         )
         y1, y1e = _evaluate_branch(
             x, x_e, t2ge0["coeff"], t2ge0["disp"],
-            cal["xmin"], cal["xmax"], include_disp, mc_N, mc_seed
+            _get_disp_coeff(t2ge0),
+            cal["xmin"], cal["xmax"], include_disp, disp_mode, mc_N, mc_seed
         )
         return _format([y0, y0e, y1, y1e])
 
@@ -276,7 +352,9 @@ def calibrate(name, index, index_e=None, *,
             xmax = br_data["xmax"]
 
             # Warn if all values fall outside validity range
-            mask_valid = (x >= xmin) & (x <= xmax) if (xmin is not None and xmax is not None) else np.zeros_like(x, dtype=bool)
+            mask_valid = ((x >= xmin) & (x <= xmax)
+                          if (xmin is not None and xmax is not None)
+                          else np.zeros_like(x, dtype=bool))
             if not np.any(mask_valid):
                 warnings.warn(
                     f"All index values are outside the validity range "
@@ -289,7 +367,8 @@ def calibrate(name, index, index_e=None, *,
                 sc = br_data[scenario]
                 y, ye = _evaluate_branch(
                     x, x_e, sc["coeff"], sc["disp"],
-                    xmin, xmax, include_disp, mc_N, mc_seed
+                    _get_disp_coeff(sc),
+                    xmin, xmax, include_disp, disp_mode, mc_N, mc_seed
                 )
                 all_results.extend([y, ye])
 

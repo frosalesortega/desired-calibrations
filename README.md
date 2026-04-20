@@ -1,19 +1,20 @@
-# DESIRED — Strong-Line Metallicity Calibrations
+# DESIRED strong-line metallicity calibrations
 
-**DEep Spectra of Ionised REgions Database**
+Python package for deriving gas-phase oxygen abundances (12 + log(O/H)) from optical strong emission-line ratios, based on the DEep Spectra of Ionised REgions Database (DESIRED), the largest compilation of H II regions and galaxies with direct electron-temperature determinations assembled to date.
 
-Python package for deriving gas-phase oxygen abundances (12 + log(O/H)) from optical strong emission-line ratios, based on the most extensive compilation of *T*<sub>e</sub>-based literature data to date.
+> **Reference:** 
 
-> **Reference:** Rosales-Ortega et al. (2026a)
+ - [The DESIRED strong-line calibrations: I. New empirical metallicity relations for the local and high-redshift universe](https://arxiv.org/abs/2604.16273)
+
 
 ## Features
 
-- **27 calibrations**: 19 monotonic + 8 double-valued strong-line indices
-- **Two abundance scenarios**: *t*² = 0 (no temperature fluctuations) and *t*² ≥ 0
-- **Monte Carlo error propagation**: fully accounts for observational uncertainties
-- **Intrinsic dispersion**: optionally included in error budget
-- **Single function API**: one `calibrate()` call for any index
-- **NumPy only**: no exotic dependencies
+- **27 calibrations**: 19 monotonic + 8 double-valued strong-line indices, covering oxygen-, nitrogen-, sulphur-, argon-, and neon-based line ratios.
+- **Two abundance scenarios**: *t*² = 0 (no temperature fluctuations) and *t*² ≥ 0 (temperature inhomogeneities).
+- **Monte Carlo error propagation**: fully accounts for observational uncertainties.
+- **Index-dependent dispersion**: σ(*x*) profile provides local calibration uncertainty at each index value, rather than a single global value.
+- **Single function API**: one `calibrate()` call for any index.
+- **NumPy only**: no exotic dependencies.
 
 ## Installation
 
@@ -49,23 +50,24 @@ OH_t2eq0, err_t2eq0, OH_t2ge0, err_t2ge0 = calibrate('N2', N2_values, index_e=N2
 
 # --- Double-valued calibration (e.g., R3) ---
 # Specify branch explicitly
-OH_t2eq0, err, OH_t2ge0, err2 = calibrate('R3', 0.6, index_e=0.1, branch='upper')
+OH_t2eq0, err, OH_t2ge0, err2 = calibrate('R3', 0.3, index_e=0.1, branch='upper')
 
 # Or get both branches at once
 (OH_up, err_up, OH_t2_up, err_t2_up,
- OH_lo, err_lo, OH_t2_lo, err_t2_lo) = calibrate('R3', 0.6, index_e=0.1)
+ OH_lo, err_lo, OH_t2_lo, err_t2_lo) = calibrate('R3', 0.3, index_e=0.1)
 ```
 
 ## API Reference
 
-### `calibrate(name, index, index_e=None, *, include_disp=True, branch=None)`
+### `calibrate(name, index, index_e=None, *, include_disp=True, disp_mode='max', branch=None)`
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `name` | str | Calibration name (e.g., `'N2'`, `'O3N2'`, `'R3'`) |
 | `index` | float or array | Observed line-ratio index value(s) |
-| `index_e` | float, array, or None | 1σ error(s). If `None`, returns intrinsic dispersion only |
-| `include_disp` | bool | Add intrinsic dispersion in quadrature to MC errors (default: `True`) |
+| `index_e` | float, array, or None | 1σ error(s). If `None`, returns calibration dispersion only |
+| `include_disp` | bool | Add calibration dispersion in quadrature to MC errors (default: `True`) |
+| `disp_mode` | str | Dispersion mode: `'global'`, `'local'`, or `'max'` (default: `'max'`; see below) |
 | `branch` | str or None | For double-valued: `'upper'`, `'lower'`, or `None` (both) |
 
 **Returns:** `(OH_t2eq0, OH_t2eq0_e, OH_t2ge0, OH_t2ge0_e)` — values outside the validity range are `NaN`.
@@ -121,20 +123,36 @@ Return the full parameter dictionary (coefficients, dispersion, validity range) 
 
 ## How It Works
 
-1. Calibration parameters (polynomial coefficients, intrinsic dispersion, validity ranges) are stored in `calibrations.json`.
+1. Calibration parameters (polynomial coefficients, dispersion profile, validity ranges) are stored in `calibrations.json`.
 2. The `calibrate()` function evaluates the polynomial and propagates errors via Monte Carlo simulation (1000 realisations by default).
 3. Values outside the validity range return `NaN`.
 
-## Error Propagation
+## Error Propagation and Calibration Dispersion
 
-When `index_e` is provided, errors are estimated using Monte Carlo propagation:
+When `index_e` is provided, errors are estimated using Monte Carlo propagation: *N* random realisations of the index are drawn from 𝒩(index, index_e²), the polynomial is evaluated at each realisation, and the standard deviation of the resulting abundances gives the propagated measurement error σ<sub>MC</sub>.
 
-- *N* random realisations of the index are drawn from 𝒩(index, index_e²)
-- The polynomial is evaluated at each realisation
-- The standard deviation of the resulting abundances gives the propagated error
-- If `include_disp=True`, the intrinsic calibration dispersion σ<sub>int</sub> is added in quadrature:
-  
-  σ<sub>total</sub> = √(σ<sub>MC</sub>² + σ<sub>int</sub>²)
+If `include_disp=True` (default), the calibration dispersion σ<sub>cal</sub> is added in quadrature:
+
+> σ<sub>total</sub> = √(σ<sub>MC</sub>² + σ<sub>cal</sub>²)
+
+The `disp_mode` parameter controls how σ<sub>cal</sub> is evaluated:
+
+| Mode | σ<sub>cal</sub> | Description |
+|------|---------|-------------|
+| `'global'` | σ<sub>fit</sub> | A single constant value (RMS scatter of the calibration residuals) applied uniformly across the full index range. |
+| `'local'`  | σ(*x*) | An index-dependent dispersion profile evaluated at each data point, computed from the quadratic parametrisation σ(*x*) = *q*₀ + *q*₁*x* + *q*₂*x*² (Eq. 3 of Rosales-Ortega et al. 2026a). This captures the fact that calibration uncertainty varies across the index range. |
+| `'max'`    | max[σ<sub>fit</sub>, σ(*x*)] | The recommended default. Uses whichever is larger at each point, ensuring that the uncertainty is never underestimated in sparsely sampled regimes (see Sec. 4.4 of Rosales-Ortega et al. 2026a). |
+
+The σ<sub>cal</sub> value represents the minimum 1σ uncertainty that should be assigned to any individual strong-line metallicity estimate, as it reflects the intrinsic scatter due to variations in ionisation parameter, electron density, and other physical conditions at fixed metallicity. This systematic uncertainty cannot be reduced by improving the signal-to-noise ratio of the observations.
+
+```python
+# Compare dispersion modes
+OH, err_max, _, _   = calibrate('N2', -1.5, index_e=0.05, disp_mode='max')    # recommended
+OH, err_glob, _, _  = calibrate('N2', -1.5, index_e=0.05, disp_mode='global')
+OH, err_local, _, _ = calibrate('N2', -1.5, index_e=0.05, disp_mode='local')
+```
+
+If `index_e` is not provided, the returned errors correspond to the calibration dispersion only (evaluated according to `disp_mode`).
 
 ## Examples
 
@@ -148,11 +166,11 @@ Complete usage examples covering all common scenarios:
 python examples/example_usage.py
 ```
 
-This script demonstrates scalar and array inputs, monotonic and double-valued calibrations, error propagation, and how to inspect calibration parameters with `get_info()`.
+This script demonstrates scalar and array inputs, monotonic and double-valued calibrations, error propagation with the three dispersion modes, and how to inspect calibration parameters with `get_info()`.
 
 ### `plot_calibrations.py`
 
-Diagnostic visualization of the calibration polynomials with Monte Carlo error bands. Requires `matplotlib`.
+Diagnostic visualization of the calibration polynomials with MC error bands. Requires `matplotlib`.
 
 ```bash
 # Plot all calibrations (overview mosaic + individual figures)
@@ -168,7 +186,7 @@ python examples/plot_calibrations.py --save
 python examples/plot_calibrations.py N2 R3 --save
 ```
 
-Each figure shows the calibration polynomial (solid line), the MC-propagated 1σ error band, and the total error band (MC + intrinsic dispersion) for the *t*² = 0 and *t*² ≥ 0 scenarios. Double-valued calibrations display four panels (upper/lower branch × *t*² = 0 / *t*² ≥ 0).
+Each figure shows the calibration polynomial (solid line), the MC-propagated 1σ error band, and the total error band (MC + calibration dispersion using `disp_mode='max'`) for the *t*² = 0 and *t*² ≥ 0 scenarios. When available, the index-dependent dispersion profile σ(*x*) is shown on the secondary axis. Double-valued calibrations display four panels (upper/lower branch × *t*² = 0 / *t*² ≥ 0).
 
 ## Testing
 
@@ -202,10 +220,13 @@ If you use this package, please cite:
 
 ```bibtex
 @article{RosalesOrtega2026a,
-    author  = {Rosales-Ortega, F. F. and others},
-    title   = {DESIRED strong-line metallicity calibrations},
-    journal = {},
-    year    = {2026},
+      title={The DESIRED strong-line calibrations: I. New empirical metallicity relations for the local and high-redshift universe}, 
+      author={F. F. Rosales-Ortega and J. E. Méndez-Delgado and J. U. Guerrero-González and C. Esteban and J. García-Rojas and K. Z. Arellano-Córdova and A. Z. Lugo-Aranda and O. Espíndola-Camacho and J. C. López-Gutiérrez and L. E. Martínez-Rivero and C. Morisset and M. Orte-García and E. Reyes-Rodríguez and L. Toribio San Cipriano and K. Kreckel and O. Egorov and I. A. Zinchenko and S. F. Sánchez and J. M. Vílchez},
+      year={2026},
+      eprint={2604.16273},
+      archivePrefix={arXiv},
+      primaryClass={astro-ph.GA},
+      url={https://arxiv.org/abs/2604.16273}, 
 }
 ```
 
