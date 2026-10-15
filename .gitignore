@@ -7,3 +7,9 @@ build/
 *.pkl
 .DS_Store
 .pytest_cache/
+.coverage
+htmlcov/
+
+# Local working materials (private data, session archive) — never published
+/_private_data/
+/_archive/

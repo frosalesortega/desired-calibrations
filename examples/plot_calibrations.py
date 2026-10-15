@@ -173,6 +173,7 @@ def plot_calibration(name, save=False, save_dir='.'):
         plt.close(fig)
     else:
         plt.show()
+        plt.close(fig)
 
 
 def plot_all_overview(save=False, save_dir='.'):
@@ -271,6 +272,7 @@ def plot_all_overview(save=False, save_dir='.'):
         plt.close(fig)
     else:
         plt.show()
+        plt.close(fig)
 
 
 # -----------------------------------------------------------------------

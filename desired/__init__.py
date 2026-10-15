@@ -16,7 +16,7 @@ Quick start
 >>> OH_t2eq0, OH_t2eq0_e, OH_t2ge0, OH_t2ge0_e = calibrate('R3', 0.6, branch='upper')
 """
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __author__  = "F. F. Rosales-Ortega"
 __reference__ = "Rosales-Ortega et al. (2026a)"
 

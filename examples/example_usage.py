@@ -87,9 +87,9 @@ for mode in ("global", "local", "max"):
           f"    OH={OH2:.2f} ± {e2:.2f}  [t2>=0]")
 
 print()
-print("  'global' = constant sigma_fit across the entire range")
-print("  'local'  = sigma(x) = q0 + q1*x + q2*x^2 (Eq. 3)")
-print("  'max'    = max[sigma_cal, sigma(x)] (recommended, default)")
+print("  'global' = a constant value across the entire range (sigma_cal by default)")
+print("  'local'  = sigma(x), evaluated via np.polyval(disp_coeff, x)")
+print("  'max'    = max[global value, sigma(x)] (recommended, default)")
 print()
 
 # Show how dispersion varies across the range
@@ -99,6 +99,24 @@ for mode in ("global", "local", "max"):
     _, errs, _, _ = calibrate("N2", N2_range, disp_mode=mode)
     err_str = "  ".join(f"{e:.2f}" for e in errs)
     print(f"    {mode:6s}: [{err_str}]")
+print()
+
+# -----------------------------------------------------------------------
+# 5b. sigma_source: sigma_cal (default, recommended) vs sigma_fit
+# -----------------------------------------------------------------------
+print("=" * 60)
+print("Example: sigma_source ('cal' vs 'fit')")
+print("=" * 60)
+print("  For most monotonic calibrations the two are nearly identical;")
+print("  for double-valued calibrations they can differ by several")
+print("  hundredths of a dex -- R_hat (lower, t2>=0) shown here:")
+print()
+
+for src in ("cal", "fit"):
+    OH, e, OH2, e2 = calibrate("R_hat", 0.0, branch="lower",
+                                disp_mode="global", sigma_source=src)
+    print(f"  sigma_source='{src}':  OH={OH:.2f} ± {e:.2f}  [t2=0]"
+          f"    OH={OH2:.2f} ± {e2:.2f}  [t2>=0]")
 print()
 
 # -----------------------------------------------------------------------
@@ -149,5 +167,27 @@ print(f"  Type:       {info['type']}")
 print(f"  Definition: {info['definition']}")
 print(f"  Range:      [{info['xmin']}, {info['xmax']}]")
 print(f"  t2eq0 coeff:      {info['t2eq0']['coeff']}")
-print(f"  t2eq0 disp:       {info['t2eq0']['disp']}")
+print(f"  t2eq0 disp:       {info['t2eq0']['disp']}       (sigma_fit)")
+print(f"  t2eq0 sigma_cal:  {info['t2eq0']['sigma_cal']}       (recommended)")
 print(f"  t2eq0 disp_coeff: {info['t2eq0'].get('disp_coeff', 'N/A')}")
+print(f"  t2eq0 oh range:   [{info['t2eq0']['oh_min']}, {info['t2eq0']['oh_max']}]  (informational)")
+print()
+
+# -----------------------------------------------------------------------
+# 9. Double-valued calibration — turnover and excluded interval (informational)
+# -----------------------------------------------------------------------
+print("=" * 60)
+print("Example: Turnover metallicity for a bivalued diagnostic")
+print("=" * 60)
+
+info = get_info("R23")
+print(f"  R23 turnover (t2=0): upper={info['turnover']['t2eq0']['upper_OH']}"
+      f"  lower={info['turnover']['t2eq0']['lower_OH']}"
+      f"  shared={info['turnover']['shared']}")
+print(f"  Excluded interval (t2=0): {info['excluded_interval_OH']['t2eq0']:.2f} dex")
+print("  (this is informational only; calibrate() does not use it -- NaN")
+print("   is decided purely from each branch's index validity range)")
+print()
+
+info = get_info("Ar3")
+print(f"  Ar3 upper-branch note: {info['notes']['upper_branch']}")
