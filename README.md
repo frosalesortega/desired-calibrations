@@ -227,6 +227,10 @@ python examples/plot_calibrations.py N2 R3 --save
 
 Each figure shows the calibration polynomial (solid line), the MC-propagated 1σ error band, and the total error band (MC + calibration dispersion using `disp_mode='max'`) for the *t*² = 0 and *t*² ≥ 0 scenarios. When available, the index-dependent dispersion profile σ(*x*) is shown on the secondary axis. Double-valued calibrations display four panels (upper/lower branch × *t*² = 0 / *t*² ≥ 0).
 
+## Paper figures
+
+[`plots-paper-1/`](plots-paper-1/) contains standalone, publication-quality PDF figures from Rosales-Ortega et al. (2026) — one file per diagnostic, for calibration curves, accuracy/dispersion plots, and literature comparisons — free to reuse (e.g. in talks or presentations) with citation to the paper. See [`plots-paper-1/README.md`](plots-paper-1/README.md) for the full description.
+
 ## Testing
 
 ```bash
